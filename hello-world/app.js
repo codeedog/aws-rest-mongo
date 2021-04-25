@@ -35,7 +35,8 @@ exports.lambdaHandler = async (event, context) => {
           }
           break;
 
-          case "PUT": case "PATCH": {
+          case "PATCH":
+          case "PUT": {
             message = {};
             message[event.httpMethod.toLowerCase()] = event.body;
           }
@@ -45,21 +46,12 @@ exports.lambdaHandler = async (event, context) => {
             message = { delete: "kill it" };
           }
           break;
+
+          default: {
+            // Unknown http method
+            throw `Unknown HTTP Verb: ${event.httpMethod}`
+          }
         }
-
-        /*console.log("httpMethod:", event.httpMethod);
-
-        if (event.queryStringParameters && event.queryStringParameters.title) {
-          console.log("q(title):  ", event.queryStringParameters.title);
-        }
-
-        if (event.headers && (event.headers["Content-Type"] || event.headers["content-type"])) {
-          console.log("h(content-type):", event.headers["Content-Type"] || event.headers["content-type"]);
-        }
-
-        if (event.body) {
-          console.log("b(data):   ", event.body);
-        }*/
 
         response = {
             'statusCode': 200,
@@ -70,8 +62,11 @@ exports.lambdaHandler = async (event, context) => {
             })
         }
     } catch (err) {
-        console.log(err);
-        return err;
+        console.warn(err);
+        response = {
+            'statusCode': 403,
+            'body': JSON.stringify({ err })
+          };
     }
 
     return response

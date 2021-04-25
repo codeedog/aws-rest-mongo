@@ -10,16 +10,8 @@
     "dotenv": "^8.2.0"
   },
   "scripts": {
-    "test": "jest --config '{\"testURL\": \"http://localhost:3000\"}'",
-    "test:hosted": "jest --config '{\"testURL\": \"https://ze4zxzq75e.execute-api.us-east-2.amazonaws.com/Prod/\"}'"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "testMatch": [
-      "**/unit/**/*.test.ts",
-      "**/unit/**/*.test.js"
-    ],
-    "verbose": false
+    "test": "jest --config '{\"testURL\": \"http://localhost:3000\", \"collectCoverage\": true}'",
+    "test:hosted": "jest tests/unit/http.test.js --config '{\"testURL\": \"https://ze4zxzq75e.execute-api.us-east-2.amazonaws.com/Prod/\"}'"
   },
   "devDependencies": {
     "axios": "^0.21.1",
