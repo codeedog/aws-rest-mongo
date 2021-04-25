@@ -6,7 +6,12 @@ const expect = chai.expect;
 const axios = require('axios');
 var event, context;
 
-const TEST_URI = process.env.TEST_URI || "http://localhost:3000/hello";
+
+
+const TEST_URI = "https://ze4zxzq75e.execute-api.us-east-2.amazonaws.com/Prod/hello" || "http://localhost:3000/hello";
+
+// chai-http plugin
+// https://www.chaijs.com/plugins/chai-http/
 
 describe(
   'Test: Reads',

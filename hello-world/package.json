@@ -7,13 +7,15 @@
   "author": "SAM CLI",
   "license": "MIT",
   "dependencies": {
-    "axios": "^0.21.1"
+    "dotenv": "^8.2.0"
   },
   "scripts": {
     "test": "mocha tests/unit/"
   },
   "devDependencies": {
+    "axios": "^0.21.1",
     "chai": "^4.2.0",
+    "chai-http": "^4.3.0",
     "mocha": "^8.2.1"
   }
 }
