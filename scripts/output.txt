@@ -1,0 +1,18 @@
+Test GET all albums
+[{"_id":"607f0191b849a1b374ab9598","title":"Aoxomoxoa","band":"The Grateful Dead"},{"_id":"607f020fa563892026926b46","title":"Wake of the Flood","band":"The Grateful Dead"},{"_id":"607f0191b849a1b374ab9597","title":"Workingman's Dead","band":"The Grateful Dead"}]
+Test GET one album
+[{"_id":"607f0191b849a1b374ab9598","title":"Aoxomoxoa","band":"The Grateful Dead"}]
+Test GET failed
+[]
+Test PUT one album
+{"message":"PUT album change","album":{"_id":"607f0191b849a1b374ab9598","title":"Pooh Bear","band":"The Grateful Dead"}}
+Test PUT failed one album
+{"message":"PUT Failed"}
+Test PATCH one album
+{"message":"PATCH album change","album":{"_id":"607f0191b849a1b374ab9598","title":"Aoxomoxoa","band":"The Grateful Dead"}}
+Test PATCH failed one album
+{"message":"PATCH Failed"}
+Test DELETE one album
+{"message":"DELETE album","album":{"_id":"607f0191b849a1b374ab9598"}}
+Test DELETE failed
+{"message":"DELETE Failed"}
