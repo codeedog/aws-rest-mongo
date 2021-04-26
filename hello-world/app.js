@@ -1,6 +1,23 @@
-// const axios = require('axios')
-// const url = 'http://checkip.amazonaws.com/';
-let response;
+/* REST <=> CRUD
+ *
+ * Convert the six HTTP actions for a REST API into a CRUD ops on Mongo DB.
+ * Reuse Album collection from Recon Website work.
+ */
+
+const { MongoClient, ObjectId, Collection } = require('mongodb');
+
+// Stash client connection for reuse
+let mongoClient;
+process.env.MONGODB_URI = "--SNIP--";
+
+// Wrap automatic connection establishment or return existing connection
+async function dbCollection(collection) {
+  if (!mongoClient) {
+    mongoClient = await MongoClient.connect(process.env.MONGODB_URI, { useUnifiedTopology: true });
+  }
+  return (await mongoClient.db('recon')).collection(collection);
+}
+
 
 /**
  *
@@ -15,59 +32,88 @@ let response;
  *
  */
 exports.lambdaHandler = async (event, context) => {
-    try {
-      let message;
-        // const ret = await axios(url);
-        console.log("request:   ", JSON.stringify(event));
+  try {
+    console.log("request:   ", JSON.stringify(event));
 
-        switch (event.httpMethod) {
-          case "GET": { // event.pathParameters._id will be all vs. one
-            if (event.pathParameters && event.pathParameters._id) {
-              message = `one fabulous item '${event.pathParameters._id}'`;
-            } else {
-              message = [ 1, 2, "buckle", { my: "shoe" }];
-            }
-          }
-          break;
+    // Get Music Collection && setup query for _id matching (if exists)
+    const coll = await dbCollection('music');
+    const match = event.pathParameters ? ({ _id: ObjectId(event.pathParameters._id)}) : {};
 
-          case "POST": {
-            message = { create: event.body };
-          }
-          break;
-
-          case "PATCH":
-          case "PUT": {
-            message = {};
-            message[event.httpMethod.toLowerCase()] = event.body;
-          }
-          break;
-
-          case "DELETE": {
-            message = { delete: "kill it" };
-          }
-          break;
-
-          default: {
-            // Unknown http method
-            throw `Unknown HTTP Verb: ${event.httpMethod}`
-          }
-        }
-
-        response = {
-            'statusCode': 200,
-            'body': JSON.stringify({
-              message
-                //message: 'hello world',
-                // location: ret.data.trim()
-            })
-        }
-    } catch (err) {
-        console.warn(err);
-        response = {
-            'statusCode': 403,
-            'body': JSON.stringify({ err })
-          };
+    // Convert the body to an Album, present
+    // handle application/json | x-www-form-urlencoded
+    // Content-Type may be camel case or lowercase
+    let album;
+    switch (event.body && (event.headers["Content-Type"] || event.headers["content-type"])) {
+      case "application/json": {
+        album = JSON.parse(event.body);
+        break;
+      }
+      case "application/x-www-form-urlencoded": {
+        let k,v;
+        console.log("X-WWW", `'${event.body}'`)
+        album = event.body.split("&").reduce((p,pair) => ([k,v] = pair.split("="), p[k]=v, p), ({}));
+        break;
+      }
     }
 
-    return response
+    // Which HTTP Method brought us here? Take appropriate action
+    switch (event.httpMethod) {
+      case "GET": {
+        let records = await coll.aggregate([{ $match: match }, { $sort: { title: 1 }}]);
+        return { statusCode: 200, body: JSON.stringify(await records.toArray()) };
+      }
+
+      case "POST": {
+        let ret = await coll.insertOne(album);
+
+        if (ret.insertedCount == 1) {
+          return { statusCode: 200, body: JSON.stringify({ message: 'POST album', album: ret.ops[0] }) };
+        } else {
+          return { statusCode: 500, body: JSON.stringify({ message: 'POST Failed' }) };
+        }
+      }
+
+      case "PATCH":
+      case "PUT": {
+        const method = event.httpMethod;
+        if (!match._id) {
+          throw `${method}: missing '_id'`;
+        }
+
+        let ret = await coll.findOneAndUpdate(match, { $set: album }, { returnOriginal: false });
+
+        if (ret.ok == 1 && ret.value) {
+          return { statusCode: 200, body: JSON.stringify({ message: `${method} album change`, album: ret.value }) };
+        } else {
+          return { statusCode: 500, body: JSON.stringify({ message: `${method} Failed` }) };
+        }
+      }
+
+      case "DELETE": {
+        if (!match._id) {
+          throw `DELETE: missing '_id'`;
+        }
+
+        let ret = await coll.findOneAndDelete(match, { projection: { _id: 1 } });
+
+        if (ret.ok == 1 && ret.value) {
+          return { statusCode: 200, body: JSON.stringify({ message: 'DELETE album', album: ret.value }) };
+        } else {
+          return { statusCode: 404, body: JSON.stringify({ message: 'DELETE Failed' }) };
+        }
+      }
+
+      default: {
+        // Unknown http method
+        throw `Unknown HTTP Verb: ${event.httpMethod}`
+      }
+    }
+  }
+  catch (err) {
+    console.warn(err);
+    return {
+      'statusCode': 403,
+      'body': JSON.stringify({ err })
+    };
+  }
 };

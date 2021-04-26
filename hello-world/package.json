@@ -7,11 +7,13 @@
   "author": "SAM CLI",
   "license": "MIT",
   "dependencies": {
-    "dotenv": "^8.2.0"
+    "dotenv": "^8.2.0",
+    "mongodb": "^3.6.6"
   },
   "scripts": {
     "test": "jest --config '{\"testURL\": \"http://localhost:3000\", \"collectCoverage\": true}'",
-    "test:hosted": "jest tests/unit/http.test.js --config '{\"testURL\": \"https://ze4zxzq75e.execute-api.us-east-2.amazonaws.com/Prod/\"}'"
+    "test:hosted": "jest tests/unit/http.test.js --config '{\"testURL\": \"https://ze4zxzq75e.execute-api.us-east-2.amazonaws.com/Prod/\"}'",
+    "test:coverage": "jest tests/unit/handler.test.js --config '{\"collectCoverage\": true}'"
   },
   "devDependencies": {
     "axios": "^0.21.1",
