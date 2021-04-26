@@ -117,3 +117,7 @@ exports.lambdaHandler = async (event, context) => {
     };
   }
 };
+
+exports.cleanUp = async () => {
+  mongoClient.close();
+}

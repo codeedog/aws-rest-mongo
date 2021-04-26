@@ -2,7 +2,12 @@
 
 const app = require('../../app.js');
 const axios = require('axios');
+const { MongoClient, ObjectId, Collection } = require('mongodb');
+
 const TEST_URI = "hello";
+
+
+
 
 //   const response = await axios.get("http://localhost:3000/hello", { params: query });
 describe(
@@ -78,31 +83,3 @@ describe(
 
   }
 );
-
-/*
-
-it("Fetch one", async () => {
-  const _id = "1234567890ABCDEF1234567890ABCDEF";
-  const response = await axios.get(`http://localhost:3000/hello/${_id}`, {
-    params: query
-  });
-
-  expect(response.status).to.be.equal(200);
-  expect(response.data.message).to.be.eql([1,2,"buckle",{"my":"shoe"}]);
-  //expect(response.data).toEqual(`Queries: ${JSON.stringify(query)}`);
-});
-
-    it('verifies successful response', async () => {
-        const result = await app.lambdaHandler(event, context)
-
-        expect(result).to.be.an('object');
-        expect(result.statusCode).to.equal(200);
-        expect(result.body).to.be.an('string');
-
-        let response = JSON.parse(result.body);
-
-        expect(response).to.be.an('object');
-        expect(response.message).to.be.equal("hello world");
-        // expect(response.location).to.be.an("string");
-    });
-    */
