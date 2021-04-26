@@ -4,16 +4,18 @@
  * Reuse Album collection from Recon Website work.
  */
 
+// Get MONGODB_RW_URI from local file system unless we are on an AWS image
+process.env.AWS_ACCOUNT_ID || require('dotenv').config({ path: `${process.env.PWD}/../.env`});
+
 const { MongoClient, ObjectId, Collection } = require('mongodb');
 
 // Stash client connection for reuse
 let mongoClient;
-process.env.MONGODB_URI = "--SNIP--";
 
 // Wrap automatic connection establishment or return existing connection
 async function dbCollection(collection) {
   if (!mongoClient) {
-    mongoClient = await MongoClient.connect(process.env.MONGODB_URI, { useUnifiedTopology: true });
+    mongoClient = await MongoClient.connect(process.env.MONGODB_RW_URI, { useUnifiedTopology: true });
   }
   return (await mongoClient.db('recon')).collection(collection);
 }

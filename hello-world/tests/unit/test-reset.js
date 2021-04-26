@@ -5,7 +5,6 @@ let mongoClient, coll;
 module.exports = {
   wipe: {
     func: async () => {
-      //console.log({ MDB_URI: process.env.MONGODB_RW_URI })
       mongoClient = await MongoClient.connect(process.env.MONGODB_RW_URI, { useUnifiedTopology: true });
       coll = (await mongoClient.db('recon')).collection("music");
       await coll.deleteMany({});
