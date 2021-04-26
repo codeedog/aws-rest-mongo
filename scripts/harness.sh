@@ -1,6 +1,21 @@
 #! /bin/bash
 
-URI=http://localhost:3000/hello
+
+# Grab up environment vars
+set -a
+[ -f .env ] && . .env
+set +a
+
+# Select local or remote web server
+case $1 in
+  hosted)
+    URI=$HOSTED_URI
+    ;;
+
+  *)
+    URI=$LOCAL_URI
+    ;;
+esac
 
 echo $'\e[1;33m'Testing REST APIs $URI$'\e[0m'
 
