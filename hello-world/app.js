@@ -33,7 +33,8 @@ async function dbCollection(collection) {
  */
 exports.lambdaHandler = async (event, context) => {
   try {
-    console.log("request:   ", JSON.stringify(event));
+    // For now, dump the event in a web server for debugging
+    process.env.NODE_ENV == "test" || console.log("request:   ", JSON.stringify(event));
 
     // Get Music Collection && setup query for _id matching (if exists)
     const coll = await dbCollection('music');
@@ -50,7 +51,6 @@ exports.lambdaHandler = async (event, context) => {
       }
       case "application/x-www-form-urlencoded": {
         let k,v;
-        console.log("X-WWW", `'${event.body}'`)
         album = event.body.split("&").reduce((p,pair) => ([k,v] = pair.split("="), p[k]=v, p), ({}));
         break;
       }
@@ -110,7 +110,7 @@ exports.lambdaHandler = async (event, context) => {
     }
   }
   catch (err) {
-    console.warn(err);
+    process.env.NODE_ENV == "test" || console.warn(err);
     return {
       'statusCode': 403,
       'body': JSON.stringify({ err })

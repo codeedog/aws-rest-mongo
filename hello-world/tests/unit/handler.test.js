@@ -80,7 +80,7 @@ describe(
   }
 );
 
-/*
+
 describe(
   'Test: Create & Delete',
   () => {
@@ -88,20 +88,20 @@ describe(
 
     it("Post an album", async () => {
       const album = { title: "Skeletons From the Closet", band: "The Grateful Dead" };
-      const response = await lambdaHandler({httpMethod: "POST", pathParameters: {_id}, body: album}, {});
-
-      //_id = reponse.data.message._id
-      _id = "made-up-id";
+      const response = await lambdaHandler({httpMethod: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(album)}, {});
+      const body = JSON.parse(response.body);
 
       expect(response.statusCode).toEqual(200);
-      expect(response.body).toEqual(JSON.stringify({message: { create: album}}));
+      expect(body.album.title).toEqual(album.title);
+      expect(body.album.band).toEqual(album.band);
+      _id = body.album._id;
     });
 
     it("Delete the album", async () => {
       const response = await lambdaHandler({httpMethod: "DELETE", pathParameters: {_id}}, {});
 
       expect(response.statusCode).toEqual(200);
-      expect(response.body).toEqual(JSON.stringify({message: {delete: "kill it"}}));
+      expect(JSON.parse(response.body)).toEqual({ message: 'DELETE album', album: { _id: _id }});
     });
 
   }
@@ -119,7 +119,7 @@ describe(
 
   }
 );
-*/
+
 
 afterAll(async () => {
   resetters.done();
