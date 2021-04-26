@@ -7,6 +7,12 @@ beforeAll(async () => {
   require('dotenv').config({ path: `${process.env.PWD}/../.env`});
 })
 
+afterAll(async () => {
+  resetters.done();
+  cleanUp();
+})
+
+
 describe(
   'Test: mongoDB Reset',
   () => {
@@ -67,13 +73,13 @@ describe(
     });
 
     it("Patch in a change", async () => {
-      const albumChange = { title: "Dancing Pooh Bears" };
+      const albumChange = { title: "Aoxomoxoa" };
       const response = await lambdaHandler({httpMethod: "PATCH", pathParameters: {_id}, headers: { "content-type": "application/json" }, body: JSON.stringify(albumChange)}, {});
 
       expect(response.statusCode).toEqual(200);
       expect(JSON.parse(response.body)).toEqual({
         message: 'PATCH album change',
-        album: { _id: '607f0191b849a1b374ab9598', title: 'Dancing Pooh Bears', band: 'The Grateful Dead' }
+        album: { _id: '607f0191b849a1b374ab9598', title: 'Aoxomoxoa', band: 'The Grateful Dead' }
       });
     });
 
@@ -119,9 +125,3 @@ describe(
 
   }
 );
-
-
-afterAll(async () => {
-  resetters.done();
-  cleanUp();
-})

@@ -1,12 +1,8 @@
 'use strict';
 
-const app = require('../../app.js');
 const axios = require('axios');
-const { MongoClient, ObjectId, Collection } = require('mongodb');
 
 const TEST_URI = "hello";
-
-
 
 
 //   const response = await axios.get("http://localhost:3000/hello", { params: query });
@@ -18,15 +14,19 @@ describe(
       const response = await axios.get(TEST_URI);
 
       expect(response.status).toEqual(200);
-      expect(response.data.message).toEqual([1,2,"buckle",{"my":"shoe"}]);
+      expect(response.data).toEqual([
+        { _id: '607f0191b849a1b374ab9598', title: 'Aoxomoxoa',         band: 'The Grateful Dead' },
+        { _id: '607f020fa563892026926b46', title: 'Wake of the Flood', band: 'The Grateful Dead' },
+        { _id: '607f0191b849a1b374ab9597', title: "Workingman's Dead", band: 'The Grateful Dead' }
+      ]);
     });
 
     it("Fetch one", async () => {
-      const _id = "1234567890ABCDEF1234567890ABCDEF";
+      const _id = "607f0191b849a1b374ab9598";
       const response = await axios.get(`${TEST_URI}/${_id}`);
 
       expect(response.status).toEqual(200);
-      expect(response.data.message).toEqual(`one fabulous item '${_id}'`);
+      expect(response.data).toEqual([{ _id: '607f0191b849a1b374ab9598', title: 'Aoxomoxoa', band: 'The Grateful Dead' }]);
     });
 
   }
@@ -38,20 +38,20 @@ describe(
 
     it("Put in a change", async () => {
       const albumChange = { title: "Dancing Bears" };
-      const _id = "xxx";
+      const _id = "607f0191b849a1b374ab9598";
       const response = await axios.put(`${TEST_URI}/${_id}`, albumChange);
 
       expect(response.status).toEqual(200);
-      expect(response.data.message).toEqual({ put: JSON.stringify(albumChange)});
+      expect(response.data).toEqual({ message: "PUT album change", album: { _id: '607f0191b849a1b374ab9598', title: 'Dancing Bears', band: 'The Grateful Dead' }});
     });
 
     it("Patch in a change", async () => {
-      const albumChange = { title: "Dancing Pooh Bears" };
-      const _id = "xxx";
+      const albumChange = { title: "Aoxomoxoa" };
+      const _id = "607f0191b849a1b374ab9598";
       const response = await axios.patch(`${TEST_URI}/${_id}`, albumChange);
 
       expect(response.status).toEqual(200);
-      expect(response.data.message).toEqual({ patch: JSON.stringify(albumChange)});
+      expect(response.data).toEqual({ message: "PATCH album change", album: { _id: '607f0191b849a1b374ab9598', title: 'Aoxomoxoa', band: 'The Grateful Dead' }});
     });
 
   }

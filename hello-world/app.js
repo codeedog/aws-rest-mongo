@@ -44,7 +44,7 @@ exports.lambdaHandler = async (event, context) => {
     // handle application/json | x-www-form-urlencoded
     // Content-Type may be camel case or lowercase
     let album;
-    switch (event.body && (event.headers["Content-Type"] || event.headers["content-type"])) {
+    switch (event.body && (event.headers["Content-Type"] || event.headers["content-type"]).split(`;`)[0]) {
       case "application/json": {
         album = JSON.parse(event.body);
         break;
