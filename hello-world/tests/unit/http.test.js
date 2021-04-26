@@ -66,19 +66,20 @@ describe(
     it("Post an album", async () => {
       const album = { title: "Skeletons From the Closet", band: "The Grateful Dead" };
       const response = await axios.post(TEST_URI, album);
-
-      //_id = reponse.data.message._id
-      _id = "made-up-id";
+      const body = response.data;
 
       expect(response.status).toEqual(200);
-      expect(response.data.message).toEqual({ create: JSON.stringify(album)});
+      expect(body.message).toEqual("POST album");
+      expect(body.album.title).toEqual(album.title);
+      expect(body.album.band).toEqual(album.band);
+      _id = body.album._id;
     });
 
     it("Delete the album", async () => {
       const response = await axios.delete(`${TEST_URI}/${_id}`);
 
       expect(response.status).toEqual(200);
-      expect(response.data.message).toEqual({delete: "kill it"});
+      expect(response.data).toEqual({message: "DELETE album", album: { _id }});
     });
 
   }
