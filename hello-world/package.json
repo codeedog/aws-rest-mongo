@@ -7,7 +7,7 @@
   "author": "SAM CLI",
   "license": "MIT",
   "dependencies": {
-    "dotenv": "^8.2.0",
+    "@aws-sdk/client-ssm": "^3.13.1",
     "mongodb": "^3.6.6"
   },
   "scripts": {
@@ -16,6 +16,7 @@
     "test:coverage": "jest tests/unit/handler.test.js --config '{\"collectCoverage\": true}'"
   },
   "devDependencies": {
+    "dotenv": "^8.2.0",
     "axios": "^0.21.1",
     "jest": "^26.6.3"
   }

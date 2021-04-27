@@ -4,8 +4,8 @@ let mongoClient, coll;
 
 module.exports = {
   wipe: {
-    func: async () => {
-      mongoClient = await MongoClient.connect(process.env.MONGODB_RW_URI, { useUnifiedTopology: true });
+    func: async (connect_uri) => {
+      mongoClient = await MongoClient.connect(connect_uri, { useUnifiedTopology: true });
       coll = (await mongoClient.db('recon')).collection("music");
       await coll.deleteMany({});
       return await (await coll.find({})).count();

@@ -1,10 +1,12 @@
 'use strict';
 
-const { lambdaHandler, cleanUp } = require('../../app.js');
+const { lambdaHandler, cleanUp, connectUri } = require('../../app.js');
 const resetters = require('./test-reset');
 
 beforeAll(async () => {
+  // Get the mongo URI from the local environment, we are not in AWS process
   require('dotenv').config({ path: `${process.env.PWD}/../.env`});
+  connectUri(process.env.MONGODB_RW_URI);
 })
 
 afterAll(async () => {
@@ -18,7 +20,7 @@ describe(
   () => {
 
     it("Wipe Music Collection", async () => {
-      const response = await resetters.wipe.func();
+      const response = await resetters.wipe.func(process.env.MONGODB_RW_URI);
       expect(response).toEqual(resetters.wipe.result);
     });
 

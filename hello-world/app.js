@@ -4,18 +4,38 @@
  * Reuse Album collection from Recon Website work.
  */
 
-// Get MONGODB_RW_URI from local file system unless we are on an AWS image
-process.env.AWS_ACCOUNT_ID || require('dotenv').config({ path: `${process.env.PWD}/../.env`});
-
+const { SSMClient, SSM, GetParameters } = require("@aws-sdk/client-ssm");
 const { MongoClient, ObjectId, Collection } = require('mongodb');
 
-// Stash client connection for reuse
-let mongoClient;
+// MongoClient provides access to mongodB
+// SSM provides access to secure connection uri from within AWS process
+// If ourside AWS process, initialize this module with it (e.g. from .env)
+
+
+// Spin up aws Secure Storage Manager.
+// Region should be extracted.
+const REGION = "us-east-2";
+const client = new SSM({ region: process.env.REGION });
+
+// Cache mongoDB client connection and connection uri
+let mongoClient, mdb_uri;
 
 // Wrap automatic connection establishment or return existing connection
 async function dbCollection(collection) {
+  if (!mdb_uri) {
+    try {
+      const params = { Names: [ 'MDB_URI' ], WithDecryption: true };
+      const data = await client.getParameters(params);
+      const vars = data.Parameters.reduce((p,v) => (p[v.Name] = v.Value, p), {});
+      mdb_uri = vars.MDB_URI;
+    }
+    catch (err) {
+      console.error("SSM init error:", JSON.stringify(err))
+      mdb_uri = `Failed to fetch Connection URI: ${err}`
+    }
+  }
   if (!mongoClient) {
-    mongoClient = await MongoClient.connect(process.env.MONGODB_RW_URI, { useUnifiedTopology: true });
+    mongoClient = await MongoClient.connect(mdb_uri, { useUnifiedTopology: true });
   }
   return (await mongoClient.db('recon')).collection(collection);
 }
@@ -122,4 +142,8 @@ exports.lambdaHandler = async (event, context) => {
 
 exports.cleanUp = async () => {
   mongoClient.close();
+}
+
+exports.connectUri = (uri) => {
+  mdb_uri = uri;
 }
