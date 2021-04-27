@@ -26,11 +26,13 @@ async function dbCollection(collection) {
     try {
       const params = { Names: [ 'MDB_URI' ], WithDecryption: true };
       const data = await client.getParameters(params);
+      //console.log("DATA:", JSON.stringify(data));
       const vars = data.Parameters.reduce((p,v) => (p[v.Name] = v.Value, p), {});
+      //console.log("VARS:", JSON.stringify(vars));
       mdb_uri = vars.MDB_URI;
     }
     catch (err) {
-      console.error("SSM init error:", JSON.stringify(err))
+      console.log("SSM init error:", JSON.stringify(err))
       mdb_uri = `Failed to fetch Connection URI: ${err}`
     }
   }
