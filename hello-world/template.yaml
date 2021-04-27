@@ -36,6 +36,9 @@ Resources:
       Handler: app.lambdaHandler
       Runtime: nodejs14.x
       Policies:
+        # To fetch a SecureString, lambda function needs read access to the
+        # SSM and decrypt access (use of the decrypt key). Ignoring fine-grained
+        # control here and just grabbing a couple of useful policies.
         - AWSKeyManagementServicePowerUser
         - AmazonSSMReadOnlyAccess
       Events:
