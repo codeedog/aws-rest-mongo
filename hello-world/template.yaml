@@ -50,7 +50,7 @@ Resources:
       Layers:
         # - !Ref MdbAwsModulesLayer
         # ARN below is the above layer, version 1.
-        # Once the Layer was created with 'sam deploy', ARN was substituted for !Ref
+        # Once the Layer was created with 'sam deploy', we can substitute ARN for !Ref
         # This also improved performance of 'sam local start-api' because that
         # server would build the library every invocation with the !Ref, but with
         # the ARN, it would pull down or build and then cache the image for reuse.
