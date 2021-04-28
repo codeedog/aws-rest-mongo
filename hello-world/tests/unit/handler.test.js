@@ -1,6 +1,6 @@
 'use strict';
 
-const { lambdaHandler, cleanUp, connectUri } = require('../../app.js');
+const { lambdaHandler, cleanUp, connectUri } = require('../../src/app.js');
 const resetters = require('./test-reset');
 
 beforeAll(async () => {
