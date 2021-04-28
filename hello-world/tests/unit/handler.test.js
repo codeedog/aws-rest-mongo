@@ -1,7 +1,7 @@
 'use strict';
 require('dotenv').config({ path: `${process.env.PWD}/../.env`});
 
-const { lambdaHandler, cleanUp, connectUri } = require('../../app.js');
+const { lambdaHandler, cleanUp, connectUri } = require('../../src/app.js');
 const resetters = require('./test-reset');
 
 
