@@ -1,18 +1,8 @@
 'use strict';
+require('dotenv').config({ path: `${process.env.PWD}/../.env`});
 
 const { lambdaHandler, cleanUp, connectUri } = require('../../app.js');
 const resetters = require('./test-reset');
-
-beforeAll(async () => {
-  // Get the mongo URI from the local environment, we are not in AWS process
-  require('dotenv').config({ path: `${process.env.PWD}/../.env`});
-  connectUri(process.env.MONGODB_RW_URI);
-})
-
-afterAll(async () => {
-  resetters.done();
-  cleanUp();
-})
 
 
 describe(
@@ -20,6 +10,9 @@ describe(
   () => {
 
     it("Wipe Music Collection", async () => {
+      // Get the mongo URI from the local environment, we are not in AWS process
+      await connectUri(process.env.MONGODB_RW_URI);
+
       const response = await resetters.wipe.func(process.env.MONGODB_RW_URI);
       expect(response).toEqual(resetters.wipe.result);
     });
@@ -76,13 +69,23 @@ describe(
 
     it("Patch in a change", async () => {
       const albumChange = { title: "Aoxomoxoa" };
-      const response = await lambdaHandler({httpMethod: "PATCH", pathParameters: {_id}, headers: { "content-type": "application/json" }, body: JSON.stringify(albumChange)}, {});
+      const body = Object.keys(albumChange).reduce((p,key) => (p.push(`${key}=${albumChange[key]}`),p), []).join('&');
+      const response = await lambdaHandler({httpMethod: "PATCH", pathParameters: {_id}, headers: { "content-type": "application/x-www-form-urlencoded" }, body }, {});
 
       expect(response.statusCode).toEqual(200);
       expect(JSON.parse(response.body)).toEqual({
         message: 'PATCH album change',
         album: { _id: '607f0191b849a1b374ab9598', title: 'Aoxomoxoa', band: 'The Grateful Dead' }
       });
+    });
+
+    it("Due to missing _id, fail to patch in a change", async () => {
+      const albumChange = { title: "Kona Mona Palona" };
+      const body = Object.keys(albumChange).reduce((p,key) => (p.push(`${key}=${albumChange[key]}`),p), []).join('&');
+      const response = await lambdaHandler({httpMethod: "PATCH", headers: { "content-type": "application/x-www-form-urlencoded" }, body }, {});
+
+      expect(response.statusCode).toEqual(403);
+      expect(JSON.parse(response.body)).toEqual({ err: "PATCH: missing '_id'" });
     });
 
   }
@@ -112,6 +115,20 @@ describe(
       expect(JSON.parse(response.body)).toEqual({ message: 'DELETE album', album: { _id: _id }});
     });
 
+    it("Delete a missing album", async () => {
+      const response = await lambdaHandler({httpMethod: "DELETE", pathParameters: {_id}}, {});
+
+      expect(response.statusCode).toEqual(404);
+      expect(JSON.parse(response.body)).toEqual({ message: 'DELETE Failed' });
+    });
+
+    it("Due to missing _id, fail to delete an album", async () => {
+      const response = await lambdaHandler({httpMethod: "DELETE"}, {});
+
+      expect(response.statusCode).toEqual(403);
+      expect(JSON.parse(response.body)).toEqual({ err: "DELETE: missing '_id'" });
+    });
+
   }
 );
 
@@ -119,11 +136,21 @@ describe(
   'Test: Error Conditions',
   () => {
 
-    it("Fetch a bundle", async () => {
+    it("Fail to fetch HEAD", async () => {
       const response = await lambdaHandler({httpMethod: "HEAD"}, {});
       expect(response.statusCode).toEqual(403);
       expect(response.body).toEqual(JSON.stringify({err: "Unknown HTTP Verb: HEAD"}));
     });
+
+    it("Fetch SSM connection param, failed read on closed connection", async () => {
+      await resetters.done();
+      await cleanUp();
+      await connectUri(undefined);
+      const response = await lambdaHandler({httpMethod: "GET"}, {});
+
+      expect(response.statusCode).toEqual(403);
+      expect(JSON.parse(response.body)).toEqual({ err: { name: "MongoError" } });
+    })
 
   }
 );

@@ -14,7 +14,6 @@ module.exports = {
   },
   fill: {
     func: async () => {
-      if (!coll) return 0;
       await coll.insertMany([
         { '_id':ObjectId('607f0191b849a1b374ab9597'), 'title' : 'Workingman\'s Dead', 'band' : 'The Grateful Dead' },
         { '_id':ObjectId('607f0191b849a1b374ab9598'), 'title' : 'Aoxomoxoa',          'band' : 'The Grateful Dead' },
@@ -25,6 +24,6 @@ module.exports = {
     result: 3
   },
   done: async () => {
-    mongoClient.close();
+    await mongoClient.close();
   }
 }
