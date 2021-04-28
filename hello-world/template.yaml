@@ -48,7 +48,13 @@ Resources:
       Description: REST API for accessing music in mongodb
       Runtime: nodejs14.x
       Layers:
-        - !Ref MdbAwsModulesLayer
+        # - !Ref MdbAwsModulesLayer
+        # ARN below is the above layer, version 1.
+        # Once the Layer was created with 'sam deploy', ARN was substituted for !Ref
+        # This also improved performance of 'sam local start-api' because that
+        # server would build the library every invocation with the !Ref, but with
+        # the ARN, it would pull down or build and then cache the image for reuse.
+        - arn:aws:lambda:us-east-2:961395819718:layer:sam-app-dependencies:1
       Policies:
         # To fetch a SecureString, lambda function needs read access to the
         # SSM and decrypt access (use of the decrypt key). Ignoring fine-grained
