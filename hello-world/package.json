@@ -2,7 +2,6 @@
   "name": "hello_world",
   "version": "1.0.0",
   "description": "hello world sample for NodeJS",
-  "main": "app.js",
   "author": "Andrew Philips",
   "license": "BSD three-clause license",
   "dependencies": {
@@ -10,8 +9,9 @@
     "mongodb": "^3.6.6"
   },
   "scripts": {
-    "test": "jest --config '{\"testURL\": \"http://localhost:3000\", \"collectCoverage\": true}'",
-    "test:hosted": "jest tests/unit/http.test.js --config '{\"testURL\": \"https://ze4zxzq75e.execute-api.us-east-2.amazonaws.com/Prod/\"}'",
+    "test": "jest --config '{\"testURL\": \"http://localhost:3000\", \"collectCoverage\": true, \"testTimeout\": 6500}'",
+    "test:hosted": "jest tests/unit/http.test.js --config '{\"testURL\": \"https://ze4zxzq75e.execute-api.us-east-2.amazonaws.com/Prod/\", \"testTimeout\": 6500}'",
+    "test:local": "jest tests/unit/http.test.js --config '{\"testURL\": \"http://localhost:3000/\", \"testTimeout\": 6500}'",
     "test:coverage": "jest tests/unit/handler.test.js --config '{\"collectCoverage\": true}'"
   },
   "devDependencies": {

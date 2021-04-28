@@ -143,7 +143,7 @@ exports.lambdaHandler = async (event, context) => {
 };
 
 exports.cleanUp = async () => {
-  mongoClient.close();
+  await mongoClient.close();
 }
 
 exports.connectUri = (uri) => {
