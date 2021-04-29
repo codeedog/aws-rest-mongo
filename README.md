@@ -64,7 +64,11 @@ The lambda isolation is in the template.yaml file. Also, because we only need to
 Also, `sam deploy` can notice that an entire source code group has not changed and won't deploy if there are no changes. However, it's important to make sure the node_modules package is stable. Therefore, when building for production or deploy or what have you, make sure you have a repeatable node_modules directory. Specifically, `npm ci --only=prod` should be the way to go. Also, notice there are three package.json files. I'm not sure this was a good idea, but I did what I did, for now. The top level package.json contains the test references, etc., and reflects the true nature of the code in terms of runtime and development time dependencies. The layer code (libs) has a package with only the runtime dependencies as I didn't trust the npm install process, but this may have been overkill. The src directory has one with everything in developed dependencies so that we don't create a node_modules at build and deployment time. Otherwise, we'd have duplicated the node_modules and destroyed the behavior we want (isolate the large unchanging library code to its own layer).
 
 
+------------
+
 *Boilerplate from the code upon which this was built*
+
+----------
 
 ## Deploy the sample application
 
