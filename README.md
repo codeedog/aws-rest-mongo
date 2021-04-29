@@ -1,8 +1,6 @@
-# sam-app
+# REST API Connection to MONGODB Cloud Atlas
 
-**REST API Connection to MONGODB Cloud Atlas**
-
-This project contains source code and supporting files for a **seriously modified** serverless application that you can deploy with the SAM CLI. It includes the following files and folders.
+This project contains source code and supporting files for a **seriously modified** serverless application that you can deploy with the SAM CLI.
 
 I rebuilt this application with the following goals:
 
