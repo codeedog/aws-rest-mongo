@@ -1,0 +1,22 @@
+{
+  "name": "hello_world",
+  "version": "1.0.0",
+  "description": "hello world sample for NodeJS",
+  "main": "app.js",
+  "author": "Andrew Philips",
+  "license": "BSD three-clause license",
+  "dependencies": {
+  },
+  "scripts": {
+    "test": "jest --config '{\"testURL\": \"http://localhost:3000\", \"collectCoverage\": true}'",
+    "test:hosted": "jest tests/unit/http.test.js --config '{\"testURL\": \"https://ze4zxzq75e.execute-api.us-east-2.amazonaws.com/Prod/\"}'",
+    "test:coverage": "jest tests/unit/handler.test.js --config '{\"collectCoverage\": true}'"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-ssm": "^3.13.1",
+    "mongodb": "^3.6.6",
+    "dotenv": "^8.2.0",
+    "axios": "^0.21.1",
+    "jest": "^26.6.3"
+  }
+}

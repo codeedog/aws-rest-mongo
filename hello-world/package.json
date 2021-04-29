@@ -2,18 +2,21 @@
   "name": "hello_world",
   "version": "1.0.0",
   "description": "hello world sample for NodeJS",
-  "main": "app.js",
-  "repository": "https://github.com/awslabs/aws-sam-cli/tree/develop/samcli/local/init/templates/cookiecutter-aws-sam-hello-nodejs",
-  "author": "SAM CLI",
-  "license": "MIT",
+  "author": "Andrew Philips",
+  "license": "BSD three-clause license",
   "dependencies": {
-    "axios": "^0.21.1"
+    "@aws-sdk/client-ssm": "^3.13.1",
+    "mongodb": "^3.6.6"
   },
   "scripts": {
-    "test": "mocha tests/unit/"
+    "test": "jest --config '{\"testURL\": \"http://localhost:3000\", \"collectCoverage\": true, \"testTimeout\": 6500}'",
+    "test:hosted": "jest tests/unit/http.test.js --config '{\"testURL\": \"https://ze4zxzq75e.execute-api.us-east-2.amazonaws.com/Prod/\", \"testTimeout\": 6500}'",
+    "test:local": "jest tests/unit/http.test.js --config '{\"testURL\": \"http://localhost:3000/\", \"testTimeout\": 6500}'",
+    "test:coverage": "jest tests/unit/handler.test.js --config '{\"collectCoverage\": true}'"
   },
   "devDependencies": {
-    "chai": "^4.2.0",
-    "mocha": "^8.2.1"
+    "dotenv": "^8.2.0",
+    "axios": "^0.21.1",
+    "jest": "^26.6.3"
   }
 }

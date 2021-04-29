@@ -5,18 +5,62 @@ Description: >
 
   Sample SAM Template for sam-app
 
+##############################################################
+# Secret Handling in development and production
+#
+# Development:
+#   Use $ROOT/.env for stashing config data, especially secrets.
+#   Use .gitignore to not checkin secrets.
+#
+# Production:
+#   > aws ssm put-parameter --name "<param>" --value "<value>" --type "<type>"
+#   # <type> := SecureString | String | ...
+#   >
+# Info: https://docs.aws.amazon.com/systems-manager/latest/userguide/param-create-cli.html#param-create-cli-securestring
+# Dev: https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/clients/client-ssm/index.html
+
+
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
-  Function:
-    Timeout: 3
+ Function:
+   Timeout: 10
+   Environment:
+     Variables:
+       REGION: us-east-2
 
 Resources:
+  MdbAwsModulesLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: sam-app-dependencies
+      Description: Dependencies for hello world func (mongoDB, AWS)
+      ContentUri: libs/
+      CompatibleRuntimes:
+        - nodejs14.x
+      LicenseInfo: 'BSD three-clause license'
+      RetentionPolicy: Retain
+
   HelloWorldFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      CodeUri: hello-world/
+      CodeUri: src/
       Handler: app.lambdaHandler
+      Description: REST API for accessing music in mongodb
       Runtime: nodejs14.x
+      Layers:
+        # - !Ref MdbAwsModulesLayer
+        - arn:aws:lambda:us-east-2:961395819718:layer:sam-app-dependencies:2
+        # ARN is MdbAwsModulesLayer, version 2
+        # Once the Layer was created with 'sam deploy', we can substitute ARN for !Ref
+        # This also improved performance of 'sam local start-api' because that
+        # server would build the library every invocation with the !Ref, but with
+        # the ARN, it would pull down or build and then cache the image for reuse.
+      Policies:
+        # To fetch a SecureString, lambda function needs read access to the
+        # SSM and decrypt access (use of the decrypt key). Ignoring fine-grained
+        # control here and just grabbing a couple of useful policies.
+        - AWSKeyManagementServicePowerUser
+        - AmazonSSMReadOnlyAccess
       Events:
         HelloWorldRead:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
