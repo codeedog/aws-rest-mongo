@@ -1,28 +1,70 @@
 # sam-app
 
-This project contains source code and supporting files for a serverless application that you can deploy with the SAM CLI. It includes the following files and folders.
+**REST API Connection to MONGODB Cloud Atlas**
 
-- hello-world - Code for the application's Lambda function.
-- events - Invocation events that you can use to invoke the function.
-- hello-world/tests - Unit tests for the application code. 
-- template.yaml - A template that defines the application's AWS resources.
+This project contains source code and supporting files for a **seriously modified** serverless application that you can deploy with the SAM CLI. It includes the following files and folders.
 
-The application uses several AWS resources, including Lambda functions and an API Gateway API. These resources are defined in the `template.yaml` file in this project. You can update the template to add AWS resources through the same deployment process that updates your application code.
+I rebuilt this application with the following goals:
 
-If you prefer to use an integrated development environment (IDE) to build and test your application, you can use the AWS Toolkit.  
-The AWS Toolkit is an open source plug-in for popular IDEs that uses the SAM CLI to build and deploy serverless applications on AWS. The AWS Toolkit also adds a simplified step-through debugging experience for Lambda function code. See the following links to get started.
+ - Learn Lambda Layers
+ - Learn how to craft HTTP Methods into REST calls
+ - Learn how to store secrets (like passwords and connect strings)
+ - Testing Local and Remote
+ - Learn how to package and deploy functions and layers from the CLI (not GUI)
+ - Learn how the CLI tools work (their idiosyncrasies)
+ - Learn the structure and meaning of template.yaml
 
-* [CLion](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [GoLand](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [IntelliJ](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [WebStorm](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [Rider](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [PhpStorm](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [PyCharm](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [RubyMine](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [DataGrip](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [VS Code](https://docs.aws.amazon.com/toolkit-for-vscode/latest/userguide/welcome.html)
-* [Visual Studio](https://docs.aws.amazon.com/toolkit-for-visual-studio/latest/user-guide/welcome.html)
+## Learnings
+
+### Secret Store
+
+Use `aws ssm put-parameter` to add parameters to the (secret) store. Parameters can only be retrieved through code,
+meaning the code must have access to the AWS client SDK. The code retrieving the secrets (Lambda function) must be
+given permission to retrieve the secret and decrypt it. The Function > Properties > Policies or its equivalent needs
+to have the correct roles. See template.yaml for detatils. Parameters can be retrieved in groups via a path. Because
+a single IAM identity may have control over numerous applications, to keep the parameters organized, they should be
+named with a path structure (eg. "/bake/mdb/connection", getParms("/bake/mdb") or "/bake").
+
+### REST and MongoDB Access
+
+The challenge with this portion of the project was understanding how to craft the HTTP verbs into something meaningful
+representing REST calls. I wound up with the standard SIX verbs in the template.yaml file. I think there's a way to
+make it shorter with {proxy+} or some such decoration. However, not all combinations of HTTP verbs and paths are legit,
+which means I could specify a single match for the entire group, but to be secure and skip calls to the lambda code,
+other secure guards should be put in place. I didn't pursue this avenue because the work required to just get explicit
+calls to the lambda function was enough. It's important to note that it's best to allow the AWS infrastructure to stop
+incorrect calls before they get to the lambda function for a number of reasons: (1) you aren't charged for calls that
+don't make it to your code, (2) the web call ends faster because the infrastructure doesn't have to spin up your code
+just to find out it's not a legal combination. I think these are the most important reasons.
+
+### Local and Remote Testing
+
+There are actually three types of testing to be done:
+
+1. Test local functions directly (no web calls)
+2. Test web locally in *AWS Mocked Server*.
+3. Test hosted in the cloud.
+
+\#1 is straightforward with Jest or other test runner tools. \#2 is probably easy to skip if you just feel like
+uploading the code and testing in the hosted model. However, that's not an efficient development loop. Better to
+test locally in as close to an AWS-like environment, then, when working, push the code to the cloud and test there.
+Understanding how to deal with local code was a big challenge. At the moment, my first rule would be to stay away
+from `sam build`. I can see no value in it, but I'd like to understand one day what the AWS engineers think it's
+good for. Instead, set up Layers (see below) and run `sam local start-api`. This launches an AWS
+mocked server that will do what you need it to. So, local calls to that server will work well. Finally, `sam deploy`
+and the flag `--guided` help push changes up to the cloud. Be sure to use the check configuration mode (setup when
+you start with `sam init`) so you can review changes before the pushed up.
+
+### Lambda Layers
+
+Layers allow you to have what amount to common libraries already provisioned in the cloud. Lambda functions work by pulling in an entire virtual image of an operating system and supporting programs (like Node). Then, all of the code required to run the function. In this case, because we're using mongoDB, we need javascript database drivers. Also, as we store the MDB connection string (containing a password) in AWS secure storage, AWS client libraries are pulled in, too. That amounts to 4MB of code just to get the libraries up and running. Then, I have a tiny file (150 lines) that processes web requests and interacts with the database once it fetches the connection data (including the decrypted password). That 4MB of code is hefty. It could be used by other function groups eventually (unimportant to me at the moment, but still good to know). It slows down my development process because if I make a change, the entire 4MB gets uploaded, not my little 5K app code. Also, every time I want to test locally, that 4MB also gets processed and loaded, so it slows down local testing in a mock AWS environment. Plenty of good reasons to isolate the low to no changing library/driver code and keep it away from speedy development process.
+
+The lambda isolation is in the template.yaml file. Also, because we only need to refer to the layer one time (!Ref) until it's uploaded, we can hardcode the ARN into the template.yaml once the layer has been uploaded. With the !Ref in the template.yaml, the local AWS server mock (`sam local server-api`) is very costly, it rebuilds the image on every request. However, if the ARN is in the template.yaml, then the local version always refers to that specific Layer version. So will the hosted lambda, for that matter. I think this is a good thing and provides a more stable configuration.
+
+Also, `sam deploy` can notice that an entire source code group has not changed and won't deploy if there are no changes. However, it's important to make sure the node_modules package is stable. Therefore, when building for production or deploy or what have you, make sure you have a repeatable node_modules directory. Specifically, `npm ci --only=prod` should be the way to go. Also, notice there are three package.json files. I'm not sure this was a good idea, but I did what I did, for now. The top level package.json contains the test references, etc., and reflects the true nature of the code in terms of runtime and development time dependencies. The layer code (libs) has a package with only the runtime dependencies as I didn't trust the npm install process, but this may have been overkill. The src directory has one with everything in developed dependencies so that we don't create a node_modules at build and deployment time. Otherwise, we'd have duplicated the node_modules and destroyed the behavior we want (isolate the large unchanging library code to its own layer).
+
+
+*Boilerplate from the code upon which this was built*
 
 ## Deploy the sample application
 
