@@ -1,8 +1,8 @@
 # REST API Connection to MONGODB Cloud Atlas
 
-This project contains source code and supporting files for a **seriously modified** serverless application that you can deploy with the SAM CLI.
+This project contains source code and supporting files for an example AWS Lambda serverless application that you can deploy with the SAM CLI.
 
-I rebuilt this application with the following goals:
+Application built to explore the following goals:
 
  - Learn Lambda Layers
  - Learn how to craft HTTP Methods into REST calls
@@ -11,6 +11,37 @@ I rebuilt this application with the following goals:
  - Learn how to package and deploy functions and layers from the CLI (not GUI)
  - Learn how the CLI tools work (their idiosyncrasies)
  - Learn the structure and meaning of template.yaml
+
+## Getting Started
+
+1. You should have `git`, `npm`, `node`, `aws` and `sam` installed.
+2. Create AWS and mongoDB Atlas accounts, users, etc.
+2. Clone the repository.
+4. Create a file `.env` and assign values to two variables:
+ - `REGION=<aws region>`
+ - `MONGODB_RW_URI="mongodb+srv://<mdb_usr>:<mdb_pwd>@<mongo_db_server"`
+3. Change directory to `hello-world`.
+5. Run `npm install`
+6. `npm run test:coverage`
+6. Stash the mongo URI in AWS SSM: `aws ssm put-parameter --name "MDB_URI" --value "<uri>" --type "SecureString"`
+6. In another shell, run `sam local start-api`
+7. `npm run test:local`
+8. `sam deploy` \# *Note: template.yaml contains a reference to a layer built previously. You should use your own layer!*
+9. Test with: `curl <deployed_api_gateway_url>`
+9. Modify `test:hosted` in `package.json` to reflect your gateway URI
+9. `npm run test:hosted`
+
+## What's Happening?
+
+This repository contains a number of moving parts:
+
+- Lambda function: `app.js` implements a REST API backended by mongo db in cloud atlas.
+- Lambda layer: A layer containing the mongodb javascript driver and an AWS driver from npmjs.
+- A SAM template file: `template.yaml` which provisions an AWS stack with the Lambda function, the Lambda layer, an API Gateway, and some roles to support them.
+- An entry in the AWS Secret Store, which you should provision from your local machine. This tests not keeping passwords in environment variables in AWS Lambda.
+- Test coverage for the local code, local mocked stack, and hosted stack.
+
+The *Getting Started* section explains the steps necessary to initialize and run each of these. Also, the layer contains only released npmjs library code. The idea is to pack all of the commonly used public libraries into one layer. A similar process could be used for common code used across a monorepo.
 
 ## Learnings
 

@@ -12,11 +12,6 @@ const { MongoClient, ObjectId, Collection } = require('mongodb');
 // If ourside AWS process, initialize this module with it (e.g. from .env)
 
 
-// Spin up aws Secure Storage Manager.
-// Region should be extracted.
-const REGION = "us-east-2";
-const client = new SSM({ region: process.env.REGION });
-
 // Cache mongoDB client connection and connection uri
 let mongoClient, mdb_uri;
 
@@ -24,11 +19,11 @@ let mongoClient, mdb_uri;
 async function dbCollection(collection) {
   if (!mdb_uri) {
     try {
+      // Fetch mongodb connection string from Security Storage
       const params = { Names: [ 'MDB_URI' ], WithDecryption: true };
+      const client = new SSM({ region: process.env.REGION });
       const data = await client.getParameters(params);
-      //console.log("DATA:", JSON.stringify(data));
       const vars = data.Parameters.reduce((p,v) => (p[v.Name] = v.Value, p), {});
-      //console.log("VARS:", JSON.stringify(vars));
       mdb_uri = vars.MDB_URI;
     }
     catch (err) {
@@ -58,7 +53,7 @@ async function dbCollection(collection) {
 exports.lambdaHandler = async (event, context) => {
   try {
     // For now, dump the event in a web server for debugging
-    process.env.NODE_ENV == "test" || console.log("request:   ", JSON.stringify(event));
+    if (process.env.DEBUG) console.log("request:   ", JSON.stringify(event));
 
     // Get Music Collection && setup query for _id matching (if exists)
     const coll = await dbCollection('music');
