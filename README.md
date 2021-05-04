@@ -20,7 +20,7 @@ Application built to explore the following goals:
 4. Create a file `.env` and assign values to two variables:
  - `REGION=<aws region>`
  - `MONGODB_RW_URI="mongodb+srv://<mdb_usr>:<mdb_pwd>@<mongo_db_server"`
-3. Change directory to `hello-world`.
+5. Change directory to `hello-world`.
 5. Run `npm install`
 6. `npm run test:coverage`
 6. Stash the mongo URI in AWS SSM: `aws ssm put-parameter --name "MDB_URI" --value "<uri>" --type "SecureString"`
