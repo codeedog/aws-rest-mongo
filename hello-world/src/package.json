@@ -4,7 +4,7 @@
   "description": "hello world sample for NodeJS",
   "main": "app.js",
   "author": "Andrew Philips",
-  "license": "BSD three-clause license",
+  "license": "MIT",
   "dependencies": {
   },
   "scripts": {

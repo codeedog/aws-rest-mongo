@@ -37,7 +37,7 @@ Resources:
       ContentUri: libs/
       CompatibleRuntimes:
         - nodejs14.x
-      LicenseInfo: 'BSD three-clause license'
+      LicenseInfo: 'MIT'
       RetentionPolicy: Retain
 
   HelloWorldFunction:

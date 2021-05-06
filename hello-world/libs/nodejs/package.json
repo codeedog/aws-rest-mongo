@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Library for hello world",
   "author": "Andrew Philips",
-  "license": "BSD three-clause license",
+  "license": "MIT",
   "dependencies": {
     "@aws-sdk/client-ssm": "^3.13.1",
     "mongodb": "^3.6.6"
