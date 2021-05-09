@@ -139,7 +139,7 @@ describe(
     it("Fail to fetch HEAD", async () => {
       const response = await lambdaHandler({httpMethod: "HEAD"}, {});
       expect(response.statusCode).toEqual(403);
-      expect(response.body).toEqual(JSON.stringify({err: "Unknown HTTP Verb: HEAD"}));
+      expect(response.body).toEqual(JSON.stringify({err: "Unknown HTTP Verb(lh): HEAD"}));
     });
 
     it("Fetch SSM connection param, failed read on closed connection", async () => {

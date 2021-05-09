@@ -49,7 +49,7 @@ Resources:
       Runtime: nodejs14.x
       Layers:
         # - !Ref MdbAwsModulesLayer
-        - arn:aws:lambda:us-east-2:961395819718:layer:sam-app-dependencies:2
+        - arn:aws:lambda:us-east-2:961395819718:layer:sam-app-dependencies:5
         # ARN is MdbAwsModulesLayer, version 2
         # Once the Layer was created with 'sam deploy', we can substitute ARN for !Ref
         # This also improved performance of 'sam local start-api' because that
@@ -65,12 +65,12 @@ Resources:
         HelloWorldRead:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
-            Path: /hello/
+            Path: /hello
             Method: GET
         HelloWorldCreate:
           Type: Api
           Properties:
-            Path: /hello/
+            Path: /hello
             Method: POST
         HelloWorldReadOne:
           Type: Api
@@ -92,6 +92,46 @@ Resources:
           Properties:
             Path: /hello/{_id}
             Method: DELETE
+        AlbumsRead:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /api/music
+            Method: GET
+        TriggerRebuild:
+          Type: Api
+          Properties:
+            Path: /api/rebuild
+            Method: POST
+        TriggerRebuildOptions:
+          Type: Api
+          Properties:
+            Path: /api/rebuild
+            Method: OPTIONS
+
+  TriggerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: app.triggerWebhook
+      Description: Initiate Amplify Build
+      Runtime: nodejs14.x
+      Layers:
+        # - !Ref MdbAwsModulesLayer
+        - arn:aws:lambda:us-east-2:961395819718:layer:sam-app-dependencies:5
+      Policies:
+        - AWSKeyManagementServicePowerUser
+        - AmazonSSMReadOnlyAccess
+      Events:
+        TriggerRebuild:
+          Type: Api
+          Properties:
+            Path: /api/trigger
+            Method: POST
+        TriggerRebuildOptions:
+          Type: Api
+          Properties:
+            Path: /api/trigger
+            Method: OPTIONS
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function

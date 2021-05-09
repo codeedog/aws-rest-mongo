@@ -4,14 +4,34 @@
  * Reuse Album collection from Recon Website work.
  */
 
+process.env.SSM_PATH = '/recon/';
+
 const { SSMClient, SSM, GetParameters } = require("@aws-sdk/client-ssm");
 const { MongoClient, ObjectId, Collection } = require('mongodb');
+const axios = require('axios').default;
 
-// MongoClient provides access to mongodB
+const TRIGGER     = `${process.env.SSM_PATH}TRIGGER`;
+const MDB_MGR_URI = `${process.env.SSM_PATH}MDB_MGR_URI`;
+
 // SSM provides access to secure connection uri from within AWS process
 // If ourside AWS process, initialize this module with it (e.g. from .env)
 
+let awsParams;
 
+async function getAwsParameter(param) {
+  if (!awsParams) {
+    // Get parameters from Security Storage
+    const client = new SSM({ region: process.env.REGION });
+    const data = await client.getParametersByPath({ Path: process.env.SSM_PATH, WithDecryption: true });
+
+    awsParams = data.Parameters.reduce((p,v) => (p[v.Name] = v.Value, p), {});
+    if (process.env.DEBUG) console.log({awsParams})
+  }
+  return awsParams[param];
+}
+
+
+// MongoClient provides access to mongodB
 // Cache mongoDB client connection and connection uri
 let mongoClient, mdb_uri;
 
@@ -19,12 +39,13 @@ let mongoClient, mdb_uri;
 async function dbCollection(collection) {
   if (!mdb_uri) {
     try {
+      mdb_uri = await getAwsParameter(MDB_MGR_URI)
       // Fetch mongodb connection string from Security Storage
-      const params = { Names: [ 'MDB_URI' ], WithDecryption: true };
+      /*const params = { Names: [ 'MDB_URI' ], WithDecryption: true };
       const client = new SSM({ region: process.env.REGION });
       const data = await client.getParameters(params);
       const vars = data.Parameters.reduce((p,v) => (p[v.Name] = v.Value, p), {});
-      mdb_uri = vars.MDB_URI;
+      mdb_uri = vars.MDB_URI;*/
     }
     catch (err) {
       console.log("SSM init error:", JSON.stringify(err))
@@ -53,7 +74,7 @@ async function dbCollection(collection) {
 exports.lambdaHandler = async (event, context) => {
   try {
     // For now, dump the event in a web server for debugging
-    if (process.env.DEBUG) console.log("request:   ", JSON.stringify(event));
+    if (process.env.DEBUG) console.log("request(lh): ", JSON.stringify(event));
 
     // Get Music Collection && setup query for _id matching (if exists)
     const coll = await dbCollection('music');
@@ -90,7 +111,6 @@ exports.lambdaHandler = async (event, context) => {
       }
 
       case "POST": {
-        console.log("POST:", album)
         let ret = await coll.insertOne(album);
 
         if (ret.insertedCount == 1) {
@@ -151,7 +171,7 @@ exports.lambdaHandler = async (event, context) => {
 
       default: {
         // Unknown http method
-        throw `Unknown HTTP Verb: ${event.httpMethod}`
+        throw `Unknown HTTP Verb(lh): ${event.httpMethod}`
       }
     }
   }
@@ -163,6 +183,84 @@ exports.lambdaHandler = async (event, context) => {
     };
   }
 };
+
+
+exports.triggerWebhook = async (event, context) => {
+  try {
+    if (process.env.DEBUG) console.log("request(tw): ", JSON.stringify(event));
+
+    switch (event.httpMethod) {
+      case "POST" : {
+        try {
+          const webhookUri = await getAwsParameter(TRIGGER);
+
+          let res = await axios.post(webhookUri, {});
+          if (process.env.DEBUG) console.log("Result:", res.status, res.data);
+          return {
+            statusCode: res.status,
+            headers: {
+              "Access-Control-Allow-Origin": "*",
+              "Access-Control-Allow-Headers": "*"
+            },
+            body: JSON.stringify(res.data)
+          };
+        }
+        catch (error) {
+          process.env.NODE_ENV == "test" || console.warn(error);
+
+          if (error.response) {
+            // The request was made and the server responded with a status code
+            // that falls out of the range of 2xx
+            console.log("POST error.response:")
+            console.log(error.response.data);
+            console.log(error.response.status);
+            console.log(error.response.headers);
+            return { statusCode: error.response.status, body: JSON.stringify(error.response.data) };
+          }
+          if (error.request) {
+            // The request was made but no response was received
+            // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+            // http.ClientRequest in node.js
+            console.log("POST error.request:")
+            console.log(error.request);
+            return { statusCode: 500, body: JSON.stringify(error.request) };
+          }
+
+          // Something happened in setting up the request that triggered an Error
+          console.log("POST error (generic):")
+          console.log('Error', error.message);
+          return { statusCode: 500, body: JSON.stringify(error.message) };
+
+        }
+      }
+      case "OPTIONS": {
+        return {
+          statusCode: 204,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Max-Age": 30,
+          }
+        }
+      }
+
+      default: {
+        // Unknown http method
+        throw `Unknown HTTP Verb(tw): ${event.httpMethod}`
+      }
+
+    }
+  }
+  catch (err) {
+    process.env.NODE_ENV == "test" || console.warn(err);
+    return {
+      'statusCode': 403,
+      'body': JSON.stringify({ err })
+    };
+  }
+}
+
 
 exports.cleanUp = async () => {
   await mongoClient.close();
