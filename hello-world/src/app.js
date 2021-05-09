@@ -79,14 +79,29 @@ exports.lambdaHandler = async (event, context) => {
     switch (event.httpMethod) {
       case "GET": {
         let records = await coll.aggregate([{ $match: match }, { $sort: { title: 1 }}]);
-        return { statusCode: 200, body: JSON.stringify(await records.toArray()) };
+        return {
+          statusCode: 200,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "*"
+          },
+          body: JSON.stringify(await records.toArray())
+        };
       }
 
       case "POST": {
+        console.log("POST:", album)
         let ret = await coll.insertOne(album);
 
         if (ret.insertedCount == 1) {
-          return { statusCode: 200, body: JSON.stringify({ message: 'POST album', album: ret.ops[0] }) };
+          return {
+            statusCode: 200,
+            headers: {
+              "Access-Control-Allow-Origin": "*",
+              "Access-Control-Allow-Headers": "*"
+            },
+            body: JSON.stringify({ message: 'POST album', album: ret.ops[0] })
+          };
         } else {
           return { statusCode: 500, body: JSON.stringify({ message: 'POST Failed' }) };
         }
@@ -119,6 +134,18 @@ exports.lambdaHandler = async (event, context) => {
           return { statusCode: 200, body: JSON.stringify({ message: 'DELETE album', album: ret.value }) };
         } else {
           return { statusCode: 404, body: JSON.stringify({ message: 'DELETE Failed' }) };
+        }
+      }
+
+      case "OPTIONS": {
+        return {
+          statusCode: 204,
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS, GET, DELETE, PUT, PATCH, HEAD",
+            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Max-Age": 30,
+          }
         }
       }
 
